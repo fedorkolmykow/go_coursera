@@ -9,9 +9,9 @@ import (
 
 const (
 	leaf 		= "├───"
-	branch  	= "|\t"
+	branch  	= "│	"
 	lastleaf 	= "└───"
-	empty		= "\t"
+	empty		= "	"
 )
 
 func main() {
@@ -35,21 +35,33 @@ func dirTree(out io.Writer, path string, printFiles bool)(err error){
 func openDir(out io.Writer, path, shift string, printFiles bool)(err error){
 	branc := branch
 	lea := leaf
+
 	def_dir, err := os.Open(path)
 	defer def_dir.Close()
 	if err != nil {
 		return err
 	}
+
 	files, err:=def_dir.Readdir(0)
 	if err != nil {
 		return err
 	}
+
+	//удаление файлов, если нет параметра -f
+	if !printFiles{
+		for i := len(files) - 1; i >= 0; i-- {
+			if !files[i].IsDir(){
+				files = append(files[:i], files[i+1:]...)
+			}
+		}
+	}
+
+	//сортировка
 	sort.Slice(files, func(i, j int) bool { return files[i].Name() < files[j].Name() })
 
 	for i, val:= range files{
-
+		//если последний элемент, то закрыть ветку
 		if (i == len(files)-1) {
-			//fmt.Println(len(files))
 			branc = empty
 			lea = lastleaf
 		}
